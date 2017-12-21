@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using System.Linq;
+using UnityEngine.Assertions;
 
 namespace Procedural
 {
@@ -176,6 +178,32 @@ namespace Procedural
                    cpA * 3.0f * a2 * pntBFactor +
                    cpB * 3.0f * pntAFactor * b2 +
                    pntB * b3;
+        }
+
+        private IEnumerable<Tuple<int, float>> CountSteps(int stepCount) 
+        {
+            var stepSize = 1.0f / (float)stepCount;
+            var t = 0.0f;
+            for(int i = 0; i < stepCount - 1; ++i) 
+            {
+                yield return Tuple.Create(i, t);
+                t += stepSize;
+            }
+            yield return Tuple.Create(stepCount - 1, 1.0f);
+        }
+
+        public Vector3[] PositionSamples(int samples) 
+        {
+            Assert.IsTrue(samples > 1);
+
+            var result = new Vector3[samples];
+            Parallel.ForEach(CountSteps(samples), s => 
+            {
+                var i = s.Item1;
+                var t = s.Item2;
+                result[i] = PositionSample(t);
+            });
+            return result;
         }
 
         public Vector3 ForwardSample(float t)
